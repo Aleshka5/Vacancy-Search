@@ -61,6 +61,22 @@ Covers: authentication, onboarding, knowledge base, chat, streaming, artifacts, 
 
 ---
 
+## 🏗️ Design Spec
+
+Located in `docs/Design Spec.md` — comprehensive specification of architecture, modules, contracts, data, and integrations.
+
+**Use Design Spec when:**
+- Designing module boundaries or layer dependencies
+- Defining new API endpoints (REST/SSE)
+- Adding new entities, repositories, or use cases
+- Planning integration with external services (OAuth, LLM providers, MinIO)
+- Deciding on data storage strategy (PostgreSQL vs MinIO paths)
+- Reviewing agent workflow and state transitions
+
+Covers: Clean Architecture layers (Domain, Application, Infrastructure, Presentation), 6 LangGraph agent nodes, REST API contracts, SSE event protocol, 12 entities, state machines, MinIO buckets, indexing strategy, and integration flows.
+
+---
+
 ## 🗄️ Data Models
 
 Located in `docs/Data Models.md` — complete domain data models for the system.
@@ -105,23 +121,26 @@ See `docs/epics/init.md` for full index.
 ## 🔄 Development Workflow
 
 1. **Read the Spec** — Locate the relevant section in `docs/Master Document.md`
-2. **Check ADRs** — Look at `docs/adr/` for architectural decisions
-3. **Check Data Models** — Review `docs/Data Models.md` for entity definitions, schemas, and relationships
-4. **Check Epics** — Find the relevant Epic in `docs/epics/`
-5. **Check Flow Spec** — Review `docs/Flow Spec.md` for UI/UX details
-6. **Implement** — Write code following Clean Architecture
-7. **Test** — Unit → Integration → E2E
-8. **Update Docs** — Update OpenAPI, add/update ADRs if needed
+2. **Check Design Spec** — Review `docs/Design Spec.md` for architecture, modules, and contracts
+3. **Check ADRs** — Look at `docs/adr/` for architectural decisions
+4. **Check Data Models** — Review `docs/Data Models.md` for entity definitions, schemas, and relationships
+5. **Check Epics** — Find the relevant Epic in `docs/epics/`
+6. **Check Flow Spec** — Review `docs/Flow Spec.md` for UI/UX details
+7. **Implement** — Write code following Clean Architecture
+8. **Test** — Unit → Integration → E2E
+9. **Update Docs** — Update OpenAPI, add/update ADRs if needed
 
 ### Key Rules
 
 - NEVER import `infrastructure` or `presentation` into `domain` or `application`
+- Design Spec defines module boundaries and layer dependencies — follow them
 - NEVER execute LaTeX compilation directly — ALWAYS use `PodmanLatexCompiler`
 - NEVER store file contents in PostgreSQL — store MinIO paths
 - NEVER hardcode LLM prompts — fetch from `global_prompts`
 - Domain models must match the definitions in `docs/Data Models.md`
 - Use `podman-compose` for local development (`make dev`)
 - All streaming uses SSE events with the defined format
+- New ADRs reference Design Spec when changing architecture or adding modules
 
 ---
 
