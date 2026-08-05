@@ -14,14 +14,14 @@
 **Decision:** Strict Clean Architecture (ADR-001). No DDD concepts (Aggregate Roots, Domain Events).
 
 ```
-┌─────────────────────────────────────────────┐
-│           Presentation Layer                │
+┌────────────────────────────────────────────┐
+│           Presentation Layer               │
 │  (FastAPI Routers, SSE, JWT, Pydantic)     │
 └────────────┬───────────────────────────────┘
              │ depends on
 ┌────────────▼───────────────────────────────┐
 │           Application Layer                │
-│  (Use Cases, DTOs, Orchestration)         │
+│  (Use Cases, DTOs, Orchestration)          │
 └────────────┬───────────────────────────────┘
              │ depends on
 ┌────────────▼───────────────────────────────┐
@@ -141,6 +141,8 @@ FastAPI routers and HTTP handlers.
 ## 3. Contracts
 
 ### 3.1 REST API Contracts
+
+> **Detailed spec:** [API Contract.md](API%20Contract.md) — complete endpoints, request/response schemas, error codes, SSE events.
 
 #### Authentication
 
@@ -287,7 +289,7 @@ See **Data Models.md** for full details.
 EMPTY → PARSING → QUESTIONING → GENERATED → COMPILING → PUBLISHED
   │          │          │              │           │
   ▼          ▼          ▼              ▼           ▼
-ERROR   ERROR     ERROR          ERROR        ERROR(TX)
+ERROR      ERROR      ERROR          ERROR      ERROR(TX)
 ```
 
 - **ERROR**: any error → retry possible
@@ -399,12 +401,14 @@ User sends vacancy text
 
 ## 8. Test Strategy
 
-| Level | Tool | Scope |
-|-------|------|-------|
-| **Unit** | pytest | Use Cases with mocked infrastructure |
-| **Integration** | pytest + testcontainers | Postgres, MinIO, full pipeline |
-| **Agent** | pytest + LLM mocks | LangGraph node transitions |
-| **E2E** | Playwright | UI flows: chat, streaming, artifacts |
+> **Detailed spec:** [Test Spec.md](Test%20Spec.md) — comprehensive test strategy for backend and frontend.
+
+|| Level | Tool | Scope |
+||-------|------|-------|
+|| **Unit** | pytest | Use Cases with mocked infrastructure |
+|| **Integration** | pytest + testcontainers | Postgres, MinIO, full pipeline |
+|| **Agent** | pytest + LLM mocks | LangGraph node transitions |
+|| **E2E** | Playwright | UI flows: chat, streaming, artifacts |
 
 ---
 
@@ -422,16 +426,16 @@ User sends vacancy text
 
 ## 10. Dependencies Between Docs
 
-| This Document | Referenced In |
-|---------------|---------------|
-| Architecture → ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-006 | |
-| Modules → Domain entities in Data Models.md | |
-| Contracts → API Contract Spec in Master Document (§7) | |
-| Data → Data Models.md (full detail) | |
-| Integrations → ADR-003 (MinIO), ADR-004 (Podman), ADR-005 (Agent) | |
-| Security → Security Spec in Master Document (§8) | |
-| Observability → Observability Spec in Master Document (§9) | |
-| Test → Test Spec in Master Document (§10) | |
+|| This Document | Referenced In |
+||---------------|---------------|
+|| Architecture → ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-006 | |
+|| Modules → Domain entities in Data Models.md | |
+|| Contracts → API Contract Spec | [API Contract.md](API%20Contract.md) + [Master Document §7](Master%20Document.md#7-api-contract-spec-rest--sse) |
+|| Data → Data Models.md (full detail) | |
+|| Integrations → ADR-003 (MinIO), ADR-004 (Podman), ADR-005 (Agent) | |
+|| Security → Security Spec in Master Document (§8) | |
+|| Observability → Observability Spec in Master Document (§9) | |
+|| Test → Test Spec | [Test Spec.md](Test%20Spec.md) + [Master Document §10](Master%20Document.md#10-test-spec) |
 
 ---
 

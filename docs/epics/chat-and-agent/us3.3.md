@@ -58,6 +58,7 @@ data: {"message_id": "uuid"}
 ## References
 - [Master Document §3 — US3.3](../../docs/Master%20Document.md#us33)
 - [Master Document §7 — API Contract Spec](../../docs/Master%20Document.md#7-api-contract-spec-rest--sse)
+- [API Contract.md](../../docs/API%20Contract.md) (detailed)
 - [ADR-002 — SSE vs WebSocket](../../adr/002-sse-vs-websocket.md)
 - [Master Document §9 — Observability Spec](../../docs/Master%20Document.md#9-observability-spec)
 

@@ -74,4 +74,5 @@ Vacancy-Search Team
 
 ## References
 - [Master Document §7: API Contract Spec (REST + SSE)](../docs/Master%20Document.md#7-api-contract-spec-rest--sse)
+- [API Contract.md](../docs/API%20Contract.md) (detailed)
 - [Master Document §3: Agent Flow](../docs/Master%20Document.md#3-agent-flow-langgraph)

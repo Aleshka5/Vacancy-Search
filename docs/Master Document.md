@@ -183,7 +183,7 @@ CREATE TABLE global_prompts (
 
 ## 7. API Contract Spec (REST + SSE)
 
-
+> **Detailed spec:** [API Contract.md](API%20Contract.md) — complete endpoints, request/response schemas, error codes, SSE events.
 
 ### REST Endpoints
 
@@ -239,6 +239,8 @@ CREATE TABLE global_prompts (
 
 
 ## 10. Test Spec
+
+> **Detailed spec:** [Test Spec.md](Test%20Spec.md) — comprehensive test strategy for backend and frontend.
 
 - **Unit:** Тестирование Application Use Cases с моками Infrastructure интерфейсов.
 - **Integration:** `pytest` + `testcontainers` (Postgres, MinIO). Проверка сохранения артефактов.
@@ -321,6 +323,7 @@ You are an expert Python/FastAPI and LangGraph developer working on a Production
 2. **Strict Clean Architecture:** Dependencies point INWARDS. `Infrastructure` implements `Domain` interfaces. `Application` orchestrates. `Presentation` handles HTTP/SSE.
 3. **SOLID:** Single Responsibility is paramount. Use cases must do one thing.
 4. **No DDD:** Do not use Aggregate Roots or Domain Events. Keep it simple Clean Architecture.
+5. **Test-Driven Thinking:** Follow [Test Spec.md](docs/Test%20Spec.md) — Unit for Use Cases with mocked infra, Integration for real Postgres/MinIO, Agent for LangGraph transitions, E2E for Playwright flows.
 
 ## Technology Stack
 - **Backend:** Python 3.11+, FastAPI, Pydantic V2, SQLAlchemy 2.0 (async), LangGraph.
