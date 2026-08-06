@@ -40,15 +40,31 @@ def key_service(test_key: bytes) -> LLMKeyService:
 
 @pytest.fixture
 def mock_repo(key_service: LLMKeyService) -> ILlmConfigRepository:
+    from unittest.mock import AsyncMock, MagicMock
+    from backend.domain.entities.llm_config import LLMConfig, LLMProvider
+
     repo = MagicMock(spec=ILlmConfigRepository)
     repo.get_by_id = AsyncMock()
     repo.get_by_user_id = AsyncMock()
     repo.get_default_by_user_id = AsyncMock()
     repo.get_by_id_and_user_id = AsyncMock()
-    repo.create = AsyncMock()
-    repo.update = AsyncMock()
-    repo.delete = AsyncMock()
-    repo.update_default = AsyncMock()
+
+    # Create a real LLMConfig for create() return value
+    from uuid import uuid4
+    test_config = LLMConfig(
+        id=uuid4(),
+        user_id=uuid4(),
+        provider=LLMProvider.OPENAI,
+        model_name="gpt-4",
+        host="https://api.openai.com",
+        api_key_encrypted=key_service.encrypt("sk-123"),
+        is_default=True,
+    )
+    repo.create = AsyncMock(return_value=test_config)
+    repo.update = AsyncMock(return_value=test_config)
+    repo.delete = AsyncMock(return_value=test_config)
+    repo.update_default = AsyncMock(return_value=test_config)
+
     repo._key_service = key_service
     return repo
 
@@ -61,7 +77,7 @@ def mock_repo(key_service: LLMKeyService) -> ILlmConfigRepository:
 def test_create_llm_config_endpoint(key_service: LLMKeyService, mock_repo: ILlmConfigRepository) -> None:
     """Test creating an LLM config via the endpoint."""
     # Import the router directly, bypassing presentation/__init__.py
-    from backend.presentation.routers.llm_config import router, _get_llm_repo
+    from backend.presentation.routers.llm_config import router
 
     app = FastAPI()
     # The router already has prefix="/llm-configs", so don't add it again
@@ -83,11 +99,12 @@ def test_create_llm_config_endpoint(key_service: LLMKeyService, mock_repo: ILlmC
     from backend.presentation.dependencies import get_current_user
     app.dependency_overrides[get_current_user] = lambda: mock_user
 
-    # Override _get_llm_repo to return our mock
-    app.dependency_overrides[_get_llm_repo] = lambda: mock_repo
-
-    # Override LLMKeyService to return our fixture
+    # Override dependencies on the app level
     app.dependency_overrides[LLMKeyService] = lambda: key_service
+
+    # Mock _get_llm_repo to return our mock repo
+    import backend.presentation.routers.llm_config as llm_mod
+    llm_mod._get_llm_repo = lambda: mock_repo
 
     client = TestClient(app)
 
@@ -97,7 +114,7 @@ def test_create_llm_config_endpoint(key_service: LLMKeyService, mock_repo: ILlmC
             "provider": "openai",
             "model_name": "gpt-4",
             "host": "https://api.openai.com",
-            "api_key": "«redacted:sk-…»",
+            "api_key": "test-api-key-123",
             "is_default": True,
         },
     )
@@ -156,7 +173,30 @@ def test_update_default_clears_others(key_service: LLMKeyService, mock_repo: ILl
 
     import backend.presentation.routers.llm_config as llm_mod
     llm_mod._get_llm_repo = lambda: mock_repo
-    llm_mod.LLMKeyService = lambda: key_service
+
+    # Patch get_current_user to return a mock user
+    import uuid as uuid_mod
+    from backend.domain.entities.user import User
+    from backend.domain.value_objects.role import Role
+    from backend.presentation.dependencies import get_current_user
+    from backend.infrastructure.services.llm_key_service import LLMKeyService
+    from unittest.mock import MagicMock
+
+    mock_user = User(
+        id=uuid_mod.uuid4(),
+        email="test@example.com",
+        google_id="test-google-id",
+        role=Role.USER,
+        is_blocked=False,
+    )
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    # Override _get_key_service at app level
+    from backend.presentation.routers.llm_config import _get_key_service as _orig_get_key_service
+    mock_key_svc = MagicMock(spec=LLMKeyService)
+    mock_key_svc.encrypt = lambda x: f"encrypted:{x}".encode()
+    mock_key_svc.decrypt = lambda x: x.decode().replace("encrypted:", "")
+    app.dependency_overrides[_orig_get_key_service] = lambda: mock_key_svc
 
     client = TestClient(app)
 

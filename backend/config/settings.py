@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "dev-secret-key"
 
     # LLM API key encryption (Fernet)
-    LLM_ENCRYPTION_KEY: str = "basetest1234567890basetest1234567890bA=="
+    LLM_ENCRYPTION_KEY: str = "f9KRI5PWQbNQ-Tz9eBGWn6eloh1K0CLbxkJQo21eEMA="
 
     _cli_parse_args: PrivateAttr = PrivateAttr(default=None)
 

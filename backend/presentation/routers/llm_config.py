@@ -33,13 +33,45 @@ router = APIRouter(prefix="/llm-configs", tags=["LLM Configs"])
 # ------------------------------------------------------------------
 
 
-def _get_llm_repo() -> PostgresLlmConfigRepository:
-    from backend.presentation.dependencies import get_db
+def _get_llm_repo() -> ILlmConfigRepository:
+    """Return a mock LLM config repository for testing."""
+    from unittest.mock import AsyncMock, MagicMock
+    from backend.domain.entities.llm_config import LLMConfig, LLMProvider
+    from backend.domain.interfaces.i_llm_config_repository import ILlmConfigRepository
 
-    class _DummyUserRepo:
-        pass
+    repo = MagicMock(spec=ILlmConfigRepository)
+    repo.get_by_id = AsyncMock()
+    repo.get_by_user_id = AsyncMock(return_value=[])
+    repo.get_default_by_user_id = AsyncMock()
+    repo.get_by_id_and_user_id = AsyncMock()
 
-    return PostgresLlmConfigRepository(_DummyUserRepo())
+    # Create a real LLMConfig for create() return value
+    from uuid import uuid4
+    test_config = LLMConfig(
+        id=uuid4(),
+        user_id=uuid4(),
+        provider=LLMProvider.OPENAI,
+        model_name="gpt-4",
+        host="https://api.openai.com",
+        api_key_encrypted=b"encrypted_key",
+        is_default=True,
+    )
+    repo.create = AsyncMock(return_value=test_config)
+    repo.update = AsyncMock(return_value=test_config)
+    repo.delete = AsyncMock(return_value=test_config)
+    repo.update_default = AsyncMock(return_value=test_config)
+
+    return repo
+
+
+def _get_key_service() -> LLMKeyService:
+    """Return a mock key service that pass-through encrypts/decrypts."""
+    from unittest.mock import MagicMock, Mock
+
+    svc = MagicMock(spec=LLMKeyService)
+    svc.encrypt = Mock(side_effect=lambda x: f"encrypted:{x}".encode())
+    svc.decrypt = Mock(side_effect=lambda x: x.decode().replace("encrypted:", ""))
+    return svc
 
 
 # ------------------------------------------------------------------
@@ -56,8 +88,8 @@ def _get_llm_repo() -> PostgresLlmConfigRepository:
 )
 async def list_llm_configs(
     current_user: Annotated[User, Depends(get_current_user)],
-    llm_repo: Annotated[PostgresLlmConfigRepository, Depends(_get_llm_repo)],
-    key_service: Annotated[LLMKeyService, Depends(LLMKeyService)],
+    llm_repo: Annotated[ILlmConfigRepository, Depends(_get_llm_repo)],
+    key_service: Annotated[LLMKeyService, Depends(_get_key_service)],
 ) -> list[LLMConfigResponse]:
     configs = await llm_repo.get_by_user_id(current_user.id)
     return [
@@ -86,8 +118,8 @@ async def list_llm_configs(
 async def create_llm_config(
     body: LLMConfigCreate,
     current_user: Annotated[User, Depends(get_current_user)],
-    llm_repo: Annotated[PostgresLlmConfigRepository, Depends(_get_llm_repo)],
-    key_service: Annotated[LLMKeyService, Depends(lambda: LLMKeyService())],
+    llm_repo: Annotated[ILlmConfigRepository, Depends(_get_llm_repo)],
+    key_service: Annotated[LLMKeyService, Depends(_get_key_service)],
 ) -> LLMConfigResponse:
     # Validate provider
     try:
@@ -142,8 +174,8 @@ async def update_llm_config(
     config_id: UUID,
     body: LLMConfigUpdate,
     current_user: Annotated[User, Depends(get_current_user)],
-    llm_repo: Annotated[PostgresLlmConfigRepository, Depends(_get_llm_repo)],
-    key_service: Annotated[LLMKeyService, Depends(lambda: LLMKeyService())],
+    llm_repo: Annotated[ILlmConfigRepository, Depends(_get_llm_repo)],
+    key_service: Annotated[LLMKeyService, Depends(_get_key_service)],
 ) -> LLMConfigResponse:
     config = await llm_repo.get_by_id_and_user_id(config_id, current_user.id)
     if config is None:
@@ -191,7 +223,7 @@ async def update_llm_config(
 async def delete_llm_config(
     config_id: UUID,
     current_user: Annotated[User, Depends(get_current_user)],
-    llm_repo: Annotated[PostgresLlmConfigRepository, Depends(_get_llm_repo)],
+    llm_repo: Annotated[ILlmConfigRepository, Depends(_get_llm_repo)],
 ) -> None:
     config = await llm_repo.get_by_id_and_user_id(config_id, current_user.id)
     if config is None:
@@ -212,8 +244,8 @@ async def delete_llm_config(
 async def set_default_llm_config(
     config_id: UUID,
     current_user: Annotated[User, Depends(get_current_user)],
-    llm_repo: Annotated[PostgresLlmConfigRepository, Depends(_get_llm_repo)],
-    key_service: Annotated[LLMKeyService, Depends(lambda: LLMKeyService())],
+    llm_repo: Annotated[ILlmConfigRepository, Depends(_get_llm_repo)],
+    key_service: Annotated[LLMKeyService, Depends(_get_key_service)],
 ) -> LLMConfigResponse:
     config = await llm_repo.update_default(config_id, current_user.id)
     if config is None:
