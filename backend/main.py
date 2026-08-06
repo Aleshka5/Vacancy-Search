@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config.settings import settings
-from backend.presentation.routers import auth
+from backend.presentation.routers import auth_router, llm_config_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,7 +42,11 @@ app.add_middleware(
 )
 
 # Mount routers under API prefix
-app.include_router(auth.router, prefix=settings.API_PREFIX)
+app.include_router(auth_router, prefix=settings.API_PREFIX)
+app.include_router(
+    llm_config_router,
+    prefix=f"{settings.API_PREFIX}/users/me",
+)
 
 
 @app.get(f"{settings.API_PREFIX}/health")

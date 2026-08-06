@@ -1,5 +1,7 @@
 """Database setup — async SQLAlchemy engine and session factory."""
 
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
@@ -12,8 +14,8 @@ class Base(DeclarativeBase):
     pass
 
 
-_engine: create_async_engine | None = None
-_async_session_factory: sessionmaker[AsyncSession] | None = None
+_engine: Optional[create_async_engine] = None
+_async_session_factory: Optional[sessionmaker[AsyncSession]] = None
 
 
 def get_engine(settings: Settings | None = None) -> create_async_engine:

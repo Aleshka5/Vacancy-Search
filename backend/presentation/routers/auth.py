@@ -3,8 +3,10 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
+
+from starlette.responses import Response as StarletteResponse
 
 from backend.application.use_cases.google_oauth import GoogleOAuthUseCase
 from backend.application.use_cases.refresh_token import RefreshTokenUseCase
@@ -30,7 +32,7 @@ class GoogleAuthRequest(BaseModel):
     id_token: EmailStr = Field(
         description="Google ID token (JWT), not the OAuth authorization code.",
     )
-    redirect_uri: str = "https://vacancy-search.app/callback"  # configurable
+    redirect_uri: str = "https://vacancy-search.app/callback"
 
 
 class GoogleAuthResponse(BaseModel):
@@ -39,12 +41,12 @@ class GoogleAuthResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "Bearer"
-    expires_in: int = 900  # 15 minutes
+    expires_in: int = 900
     user: User
 
 
 class RefreshResponse(BaseModel):
-    """Response body for token refresh."""
+    """Response body for POST /auth/refresh."""
 
     access_token: str
     refresh_token: str
@@ -57,12 +59,15 @@ class RefreshResponse(BaseModel):
 # ------------------------------------------------------------------
 
 
+class DummySession:
+    """Placeholder session for use inside dependency functions."""
+    pass
+
+
 def _get_google_oauth_use_case() -> GoogleOAuthUseCase:
     from backend.infrastructure.repositories.postgres_user_repository import (
         PostgresUserRepository,
     )
-
-    # Create handler instances with settings
     from backend.config.settings import settings
 
     jwt_handler = JWTHandler(settings)
@@ -71,12 +76,7 @@ def _get_google_oauth_use_case() -> GoogleOAuthUseCase:
         client_secret=settings.GOOGLE_CLIENT_SECRET,
     )
     refresh_use_case = RefreshTokenUseCase(jwt_handler)
-
-    # We'll use a placeholder session — the router receives it via FastAPI deps
-    class _DummySession:
-        pass
-
-    user_repo = PostgresUserRepository(_DummySession())
+    user_repo = PostgresUserRepository(DummySession())
     return GoogleOAuthUseCase(user_repo, jwt_handler, google_handler, refresh_use_case)
 
 
@@ -97,30 +97,22 @@ def _get_refresh_use_case() -> RefreshTokenUseCase:
     response_model=GoogleAuthResponse,
     status_code=status.HTTP_200_OK,
     summary="Exchange Google ID token for JWT",
-    description="""
-    POST /api/v1/auth/google
-
-    Accepts a Google ID token and returns access + refresh JWTs.
-    - Access Token (15 min) — returned in JSON body for frontend memory storage.
-    - Refresh Token (30 days) — set as HttpOnly, Secure, SameSite=Strict cookie.
-    """,
 )
 async def google_auth(
     request: GoogleAuthRequest,
     use_case: Annotated[GoogleOAuthUseCase, Depends(_get_google_oauth_use_case)],
-    response: Response,
+    response=Depends(),
 ):
     result = await use_case.authenticate(request.id_token)
     user = result["user"]
 
-    # Set refresh token as HttpOnly cookie
     response.set_cookie(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
         secure=True,
         samesite="strict",
-        max_age=30 * 24 * 60 * 60,  # 30 days
+        max_age=30 * 24 * 60 * 60,
         path="/api/v1/auth/refresh",
     )
 
@@ -136,17 +128,11 @@ async def google_auth(
     response_model=RefreshResponse,
     status_code=status.HTTP_200_OK,
     summary="Refresh access token using refresh cookie",
-    description="""
-    POST /api/v1/auth/refresh
-
-    Expects the refresh_token cookie. Returns a new access token and
-    a rotated refresh token (set as cookie).
-    """,
 )
 async def refresh(
-    request: RefreshTokenUseCase = Depends(_get_refresh_use_case),
+    request: Annotated[RefreshTokenUseCase, Depends(_get_refresh_use_case)],
     refresh_token: str | None = Depends(lambda r: r.cookies.get("refresh_token")),
-    response: Response = Depends(),
+    response=Depends(),
 ):
     if not refresh_token:
         raise HTTPException(
@@ -162,7 +148,6 @@ async def refresh(
             detail="Invalid or expired refresh token",
         )
 
-    # Set new refresh token as cookie (rotation)
     response.set_cookie(
         key="refresh_token",
         value=result["refresh_token"],
@@ -182,9 +167,9 @@ async def refresh(
 @router.get(
     "/me",
     response_model=User,
+    response_model_exclude_unset=True,
     status_code=status.HTTP_200_OK,
     summary="Get current user profile",
-    description="Returns the authenticated user's profile.",
 )
 async def get_current_user_profile(
     current_user: Annotated[User, Depends(get_current_user)],

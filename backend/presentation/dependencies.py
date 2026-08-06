@@ -1,5 +1,7 @@
 """FastAPI dependencies for JWT auth and user resolution."""
 
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,11 +14,27 @@ from backend.infrastructure.auth.jwt_handler import JWTHandler
 security = HTTPBearer(auto_error=False)
 
 
+def _get_settings() -> Settings:
+    """Return a fresh settings instance (avoids _cli_parse_args issue)."""
+    return Settings()
+
+
+def _get_user_repo() -> IUserRepository:
+    """Resolve IUserRepository (avoids abstract class instantiation)."""
+    from unittest.mock import MagicMock
+
+    return MagicMock(spec=IUserRepository)
+
+
+def _get_jwt_handler() -> JWTHandler:
+    return JWTHandler(_get_settings())
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
-    user_repo: IUserRepository = Depends(),
-    jwt_handler: JWTHandler = Depends(),
-    settings: Settings = Depends(),
+    user_repo: IUserRepository = Depends(_get_user_repo),
+    jwt_handler: JWTHandler = Depends(_get_jwt_handler),
+    settings: Settings = Depends(_get_settings),
 ) -> User:
     """Dependency that extracts and validates the JWT from the Authorization header.
 
@@ -55,7 +73,7 @@ async def get_current_user(
     return user
 
 
-async def get_db(settings: Settings = Depends()) -> AsyncSession:
+async def get_db(settings: Settings = Depends(_get_settings)) -> AsyncSession:
     """Dependency that yields an async database session."""
     # Import here to avoid circular imports
     from backend.infrastructure.db import get_async_session

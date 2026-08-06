@@ -1,9 +1,8 @@
 """Pydantic settings — ENV-based configuration."""
 
 from pathlib import Path
-from typing import ClassVar
 
-from pydantic import Field
+from pydantic import ConfigDict, Field, PrivateAttr
 from pydantic_settings import BaseSettings
 
 
@@ -38,10 +37,16 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "dev-secret-key"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    # LLM API key encryption (Fernet)
+    LLM_ENCRYPTION_KEY: str = "basetest1234567890basetest1234567890bA=="
+
+    _cli_parse_args: PrivateAttr = PrivateAttr(default=None)
+
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
 
 
 # Module-level singleton for direct imports

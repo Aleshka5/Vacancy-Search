@@ -2,6 +2,10 @@
 
 from backend.infrastructure.auth.google_oauth import GoogleOAuthHandler
 from backend.infrastructure.auth.jwt_handler import JWTHandler
+from backend.infrastructure.models.llm_config import LlmConfig
+from backend.infrastructure.repositories.postgres_llm_config_repository import (
+    PostgresLlmConfigRepository,
+)
 from backend.infrastructure.repositories.postgres_user_repository import (
     PostgresUserRepository,
 )
@@ -9,5 +13,7 @@ from backend.infrastructure.repositories.postgres_user_repository import (
 __all__ = [
     "GoogleOAuthHandler",
     "JWTHandler",
+    "LlmConfig",
+    "PostgresLlmConfigRepository",
     "PostgresUserRepository",
 ]
