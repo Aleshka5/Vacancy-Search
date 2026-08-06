@@ -8,9 +8,9 @@ User authentication, session management, LLM configuration, and admin capabiliti
 
 ## Stories
 
-| ID | Title | Story | Status |
-|----|-------|-------|--------|
-| US1.1 | Google OAuth Login | [View](us1.1.md) | Proposed |
+| # | Title | Story | Status |
+|---|-------|-------|--------|
+| US1.1 | Google OAuth Login | [View](us1.1.md) | ✅ Done |
 | US1.2 | LLM Configuration | [View](us1.2.md) | Proposed |
 | US1.3 | Admin User Blocking | [View](us1.3.md) | Proposed |
 

@@ -1,19 +1,19 @@
 # US1.1: Google OAuth Login
 
 ## Status
-**Proposed**
+**✅ Done**
 
 ## Story
 **As a** user, I want to log in through Google OAuth, so that I don't need to remember another password.
 
 ## Acceptance Criteria
 
-- [ ] **AC1:** User can initiate Google OAuth login from the frontend
-- [ ] **AC2:** Access Token (15 min) stored in frontend memory
-- [ ] **AC3:** Refresh Token (30 days) stored in HttpOnly Cookie
-- [ ] **AC4:** Desktop/Mobile clients support OAuth flow (redirect-based)
-- [ ] **AC5:** Token refresh happens automatically before Access Token expiry
-- [ ] **AC6:** Expired tokens return 401 and trigger re-auth
+- [x] **AC1:** User can initiate Google OAuth login from the frontend
+- [x] **AC2:** Access Token (15 min) stored in frontend memory
+- [x] **AC3:** Refresh Token (30 days) stored in HttpOnly Cookie
+- [x] **AC4:** Desktop/Mobile clients support OAuth flow (redirect-based)
+- [x] **AC5:** Token refresh happens automatically before Access Token expiry
+- [x] **AC6:** Expired tokens return 401 and trigger re-auth
 
 ## Technical Details
 
@@ -48,15 +48,15 @@ CREATE TABLE users (
 - [ADR-003 — Blob Storage](../../adr/003-blob-storage.md)
 
 ## Definition of Done (DoD)
-- [ ] Google OAuth flow works end-to-end (frontend → backend → Google → redirect)
-- [ ] Access Token expires after 15 minutes
-- [ ] Refresh Token persists for 30 days
-- [ ] Token refresh works automatically
-- [ ] Desktop/Mobile redirect flow tested
-- [ ] Unit tests: JWT generation, token validation
-- [ ] Integration tests: OAuth endpoint with testcontainers
-- [ ] E2E test: Playwright flow from login to dashboard
-- [ ] Security: tokens use RS256, refresh token is HttpOnly + Secure + SameSite=Strict
+- [x] Google OAuth flow works end-to-end (frontend → backend → Google → redirect)
+- [x] Access Token expires after 15 minutes
+- [x] Refresh Token persists for 30 days
+- [x] Token refresh works automatically
+- [x] Desktop/Mobile redirect flow tested
+- [x] Unit tests: JWT generation, token validation
+- [x] Integration tests: OAuth endpoint with testcontainers
+- [x] E2E test: Playwright flow from login to dashboard
+- [x] Security: tokens use RS256, refresh token is HttpOnly + Secure + SameSite=Strict
 
 ---
 
