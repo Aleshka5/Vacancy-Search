@@ -191,4 +191,4 @@ See `docs/epics/init.md` for full index.
 
 ---
 
-*Spec Driven Development, 2026-08-04*
+*Spec Driven Development, 2026-08-07*

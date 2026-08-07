@@ -28,14 +28,24 @@ class JWTHandler:
         key = self._settings.JWT_PRIVATE_KEY
         if isinstance(key, Path):
             return key.read_text()
-        return key
+        key_str = str(key)
+        if key_str.strip().startswith("-----"):
+            return key_str
+        if Path(key_str).is_file():
+            return Path(key_str).read_text()
+        return key_str
 
     @property
     def _public_key(self) -> str:
         key = self._settings.JWT_PUBLIC_KEY
         if isinstance(key, Path):
             return key.read_text()
-        return key
+        key_str = str(key)
+        if key_str.strip().startswith("-----"):
+            return key_str
+        if Path(key_str).is_file():
+            return Path(key_str).read_text()
+        return key_str
 
     # ------------------------------------------------------------------
     # Token generation

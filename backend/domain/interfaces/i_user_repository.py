@@ -9,6 +9,22 @@ from backend.domain.entities.user import User
 class IUserRepository(ABC):
     """Repository interface for User persistence."""
 
+    async def list_all(self, limit: int = 100, offset: int = 0) -> list[User]:
+        """Return all users (default 100).  Sub-classes may override for SQL optimisation."""
+        users: list[User] = []
+        page = 0
+        while len(users) < limit:
+            chunk = await self._list_page(page, limit)
+            if not chunk:
+                break
+            users.extend(chunk)
+            page += 1
+        return users[offset : offset + limit]
+
+    @abstractmethod
+    async def _list_page(self, page: int, limit: int) -> list[User]:
+        """Fetch one page of users (page 0-based)."""
+
     @abstractmethod
     async def get_by_google_id(self, google_id: str) -> User | None:
         """Find user by Google OAuth ID."""
